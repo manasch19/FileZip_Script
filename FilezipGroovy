@@ -1,0 +1,54 @@
+import java.io.*
+import java.util.zip.*
+import com.boomi.execution.ExecutionUtil;
+logger = ExecutionUtil.getBaseLogger();
+
+String IR_TALEND_OUTPUT =ExecutionUtil.getDynamicProcessProperty("IR_TALEND_OUTPUT");
+String JOB_GUID =ExecutionUtil.getDynamicProcessProperty("JOB_GUID");
+String CMMS_ID =ExecutionUtil.getDynamicProcessProperty("CMMS_ID");
+
+logger.info("JOB_GUID before condition "+JOB_GUID);
+JOB_GUID = (JOB_GUID == null || JOB_GUID == "" || JOB_GUID == "null" ) ? "12345xyz789" : JOB_GUID;
+
+def sourceFolder = new File(IR_TALEND_OUTPUT+"\\G2DL_EAM_INGESTION\\"+CMMS_ID+"_"+JOB_GUID+"\\")
+def zipFilePath = IR_TALEND_OUTPUT+"\\G2DL_EAM_INGESTION\\"+CMMS_ID+"_"+JOB_GUID+".zip"
+
+
+logger.info("Files are zipped from "+sourceFolder);
+logger.info("Files are zipped to "+zipFilePath);
+
+logger.info("JOB_GUID after condition "+JOB_GUID);
+
+// Create the output stream for the zip file
+def zipFile = new ZipOutputStream(new FileOutputStream(zipFilePath))
+
+// Iterate over the files in the source folder
+sourceFolder.listFiles().each { file ->
+    // Skip subdirectories
+    if (file.isDirectory()) {
+        return
+    }
+
+    // Create a new zip entry for the file
+    def zipEntry = new ZipEntry(file.name)
+
+    // Add the zip entry to the zip file
+    zipFile.putNextEntry(zipEntry)
+
+    // Copy the file to the zip file
+    def input = new FileInputStream(file)
+    input.eachByte(1024) { buffer, length ->
+        zipFile.write(buffer, 0, length)
+    }
+
+    // Close the zip entry
+    zipFile.closeEntry()
+}
+
+// Close the zip file
+zipFile.close()
+
+// Print a message indicating the zip file was created
+
+logger.info("Files are zipped from "+sourceFolder);
+logger.info("Files are zipped to "+zipFilePath);
